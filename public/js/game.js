@@ -7,47 +7,40 @@ $(document).ready(function() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	var name = localStorage.getItem('gameName');
+	var myName = localStorage.getItem('gameName');
 	const INITIAL_RADIUS = 30;
-	var startPositionX = canvas.width / 2;
-	var startPositionY = canvas.height / 2;
-	var socket = io({ query: "x=" + startPositionX + "&y=" + startPositionY + "&r=" + INITIAL_RADIUS + "&name=" + name});
+	const START_POSITION_X = canvas.width / 2;
+	const START_POSITION_Y = canvas.height / 2;
+	var socket = io({ query: "x=" + START_POSITION_X + "&y=" + START_POSITION_Y + "&r=" + INITIAL_RADIUS + "&name=" + myName});
 
 	var enemies = [];
-	var dead = [];
-	socket.on('existing circles', function(circles){
-		enemies = enemies.concat(circles);
-		console.log(circles);
+	var myCircle = {
+		x: START_POSITION_X,
+		y: START_POSITION_Y,
+		r: INITIAL_RADIUS,
+		name: myName
+	};
+	socket.on('my circle', function(circle){
+		myCircle = circle;
 	});
-	socket.on('new circle', function(newCircle){
-		enemies.push(newCircle);
-	});
-	socket.on('move', function(moved){
-		enemies.forEach((enemy, index) => {
-			if (enemy.id == moved.id) {
-				enemies[index] = moved;
-			}
+	socket.on('game update', function(circles){
+		enemies = circles.filter(function(circle) {
+			return circle.id !== myCircle.id;
 		});
-	});
-	socket.on('dead', function(id){
-		if (id == socket.id) {
+		var myCircleArray = circles.filter(function(circle) {
+			return circle.id == myCircle.id;
+		});
+		myCircle = myCircleArray[0];
+		if (!myCircle) {
 			gameOver();
-		} else {
-			killEnemy(id);
 		}
-	});
-	socket.on('user disconnected', function(id){
-		killEnemy(id);
 	});
 
 	// Game logic
 	const COOKIE_RADIUS = 10;
 	const NUMBER_OF_COOKIES = 20;
-	var mouseX = startPositionX;
-	var mouseY = startPositionY;
-	var circleX = startPositionX;
-	var circleY = startPositionY;
-	var circleRadius = INITIAL_RADIUS;
+	var mouseX = START_POSITION_X;
+	var mouseY = START_POSITION_Y;
 	var moveX, moveY = 0;
 	var cookies = [];
 	var cookieX, cookieY;
@@ -72,41 +65,28 @@ $(document).ready(function() {
 	}
 
 	function setCirclePosition() {
-		moveX = (mouseX - circleX) / 100;
-		moveY = (mouseY - circleY) / 100;
-		circleX += moveX;
-		circleY += moveY;
-		if (isAlive) {
-			socket.emit('move', {
-				id: socket.id,
-				x: circleX,
-				y: circleY,
-				r: circleRadius,
-				name: name
-			});
-		}
+		moveX = (mouseX - myCircle.x) / 100;
+		moveY = (mouseY - myCircle.y) / 100;
+		myCircle.x += moveX;
+		myCircle.y += moveY;
 	}
 
 	function checkCollisions() {
 		cookies.forEach((cookie, index) => {
-			dx = circleX - cookie[0];
-			dy = circleY - cookie[1];
+			dx = myCircle.x - cookie[0];
+			dy = myCircle.y - cookie[1];
 			distance = Math.sqrt(dx * dx + dy * dy);
 
-			if (distance < (circleRadius + COOKIE_RADIUS)) {
+			if (distance < (myCircle.r + COOKIE_RADIUS)) {
 			    cookies.splice(index, 1);
 			    createCookie();
 			    score += 1;
-			    circleRadius += 1;
+			    myCircle.r += 1;
 			}
 		});
-	}
-
-	function createCookie() {
-		cookieX = Math.random() * canvas.width;
-		cookieY = Math.random() * canvas.height;
-		color = colors[Math.floor(Math.random() * colors.length)];
-		cookies.push([cookieX, cookieY, color]);
+		if (isAlive) {
+			socket.emit('move', myCircle);
+		}
 	}
 
 	function drawCircle(x, y, r, playerName) {
@@ -130,15 +110,16 @@ $(document).ready(function() {
 		});
 	}
 
+	function createCookie() {
+		cookieX = Math.random() * canvas.width;
+		cookieY = Math.random() * canvas.height;
+		color = colors[Math.floor(Math.random() * colors.length)];
+		cookies.push([cookieX, cookieY, color]);
+	}
+
 	function gameOver() {
 		isAlive = false;
 		window.location.href = '/dead';
-	}
-
-	function killEnemy(id) {
-		enemies = enemies.filter(function(enemy) {
-			return enemy.id !== id;
-		});
 	}
 
 	function update() {
@@ -151,7 +132,7 @@ $(document).ready(function() {
 			ctx.fillStyle = cookie[2];
 			ctx.fill();
 		});
-		drawCircle(circleX, circleY, circleRadius, name);
+		drawCircle(myCircle.x, myCircle.y, myCircle.r, myName);
 		drawEnemies();
 
 		requestAnimationFrame(update);

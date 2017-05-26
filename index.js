@@ -17,10 +17,8 @@ app.get('/dead', (req, res) => {
 
 io.on('connection', onConnection);
 
-var users = [];
 var circles = [];
 function onConnection(socket) {
-	io.to(socket.id).emit('existing circles', circles);
 	var newCircle = {
 		id: socket.id,
 		x: parseInt(socket.request._query['x']),
@@ -29,9 +27,7 @@ function onConnection(socket) {
 		name: socket.request._query['name']
 	};
 	circles.push(newCircle);
-	socket.broadcast.emit('new circle', newCircle);
-
-	users[socket.id] = socket.request._query['name'];
+	io.to(socket.id).emit('my circle', newCircle);
 
   	socket.on('move', function(moved){
   		checkCollisions(moved, socket);
@@ -40,16 +36,19 @@ function onConnection(socket) {
 				circles[index] = moved;
 			}
 		});
-  		socket.broadcast.emit('move', moved);
   	});
 
   	socket.on('disconnect', function(){
   		circles = circles.filter(function(circle) {
 			return circle.id !== socket.id;
 		});
-    	io.emit('user disconnected', socket.id);
   	});
 };
+
+setInterval(function() {
+	console.log(circles);
+	io.emit('game update', circles);
+}, 1000/60);
 
 function checkCollisions(moved, socket) {
 	circles.forEach((circle, index) => {
@@ -64,13 +63,11 @@ function checkCollisions(moved, socket) {
 					circles = circles.filter(function(candidate) {
 						return candidate.id !== circle.id;
 					});
-					socket.emit('dead', circle.id);
 				} else if (moved.r < circle.r) {
 					//moved dies
 					circles = circles.filter(function(candidate) {
 						return candidate.id !== moved.id;
 					});
-					socket.emit('dead', moved.id);
 				}
 			}
 		}
