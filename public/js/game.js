@@ -10,11 +10,11 @@ $(document).ready(function() {
 	const WORLD_WIDTH = 3000;
 	const WORLD_HEIGHT = 2000;
 	var myName = localStorage.getItem('gameName');
-	const INITIAL_RADIUS = 30;
 	const START_POSITION_X = WORLD_WIDTH / 2;
 	const START_POSITION_Y = WORLD_HEIGHT / 2;
+	const INITIAL_RADIUS = 30;
 	var minX, maxX, minY, maxY;
-	var socket = io({ query: "&r=" + INITIAL_RADIUS + "&name=" + myName});
+	var socket = io({ query: "&name=" + myName});
 
 	var enemies = [];
 	var myCircle = {
@@ -38,6 +38,16 @@ $(document).ready(function() {
 		if (!myCircle) {
 			gameOver();
 		}
+	});
+
+	var sentTime = Date.now();
+	setInterval(function() {
+		sentTime = Date.now();
+		socket.emit('ping', myCircle);
+	}, 1000);
+	socket.on('ping', function(data){
+		var lag = (Date.now() - sentTime) / 2;
+		console.log(lag);
 	});
 
 	// Game logic
@@ -110,16 +120,20 @@ $(document).ready(function() {
 
 	function update() {
 		setCirclePosition();
-		emitMove();
 		draw();
 
 		requestAnimationFrame(update);
 	}
 	requestAnimationFrame(update);
 
+	// send my move loop
+	setInterval(function() {
+		emitMove();
+	}, 1000/66);
+
 	var camX, camY;
 	function draw() {
-		ctx.setTransform(1,0,0,1,0,0);//reset the transform matrix as it is cumulative
+		ctx.setTransform(1,0,0,1,0,0); // reset the transform matrix as it is cumulative
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		if (myCircle.x - canvas.width/2 >= 0 && myCircle.x + canvas.width/2 <= WORLD_WIDTH) {
 			camX = -myCircle.x + canvas.width/2;

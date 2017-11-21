@@ -21,6 +21,7 @@ const WORLD_WIDTH = 3000;
 const WORLD_HEIGHT = 2000;
 const COOKIE_RADIUS = 10;
 const NUMBER_OF_COOKIES = 150;
+const INITIAL_RADIUS = 30;
 var cookies = [];
 var cookieX, cookieY;
 var colors = ["blue", "red", "green", "yellow"];
@@ -44,19 +45,23 @@ function onConnection(socket) {
 		id: socket.id,
 		x: WORLD_WIDTH/2,
 		y: WORLD_HEIGHT/2,
-		r: parseInt(socket.request._query['r']),
+		r: INITIAL_RADIUS,
 		name: socket.request._query['name']
 	};
 	circles.push(newCircle);
 	io.to(socket.id).emit('my circle', newCircle);
 
   	socket.on('move', function(moved){
-  		checkCollisions(moved, socket);
+  		//checkCollisions(moved, socket);
   		circles.forEach((circle, index) => {
 			if (circle.id == moved.id) {
 				circles[index] = moved;
 			}
 		});
+  	});
+
+  	socket.on('ping', function(){
+  		io.emit('ping', 'Pinging...');
   	});
 
   	socket.on('disconnect', function(){
@@ -66,44 +71,52 @@ function onConnection(socket) {
   	});
 };
 
+// game physics loop
+setInterval(function() {
+	checkCollisions();
+}, 1000/66);
+
+// send game state loop
 setInterval(function() {
 	io.emit('game update', {cookies: cookies, circles: circles});
-}, 1000/60);
+}, 1000/22);
 
-function checkCollisions(moved, socket) {
-	cookies.forEach((cookie, index) => {
-		dx = moved.x - cookie[0];
-		dy = moved.y - cookie[1];
-		distance = Math.sqrt(dx * dx + dy * dy);
+function checkCollisions() {
+	circles.forEach((circle1, index) => {
+		circles.forEach((circle2, index) => {
+			if (circle1.id != circle2.id) {
+				dx = circle2.x - circle1.x;
+				dy = circle2.y - circle1.y;
+				distance = Math.sqrt(dx * dx + dy * dy);
 
-		if (distance < (moved.r + COOKIE_RADIUS)) {
-		    cookies.splice(index, 1);
-		    createCookie();
-		    moved.r += 1;
-		}
-	});
-	circles.forEach((circle, index) => {
-		if (circle.id != moved.id) {
-			dx = moved.x - circle.x;
-			dy = moved.y - circle.y;
-			distance = Math.sqrt(dx * dx + dy * dy);
-
-			if (distance < (moved.r + circle.r)) {
-				if (moved.r > circle.r) {
-					//circle dies
-		    		moved.r += circle.r;
-					circles = circles.filter(function(candidate) {
-						return candidate.id !== circle.id;
-					});
-				} else if (moved.r < circle.r) {
-					//moved dies
-		    		circle.r += moved.r;
-					circles = circles.filter(function(candidate) {
-						return candidate.id !== moved.id;
-					});
+				if (distance < (circle2.r + circle1.r)) {
+					if (circle2.r > circle1.r) {
+						//circle1 dies
+			    		circle2.r += circle.r;
+						circles = circles.filter(function(candidate) {
+							return candidate.id !== circle1.id;
+						});
+					} else if (circle2.r < circle1.r) {
+						//circle2 dies
+			    		circle1.r += circle2.r;
+						circles = circles.filter(function(candidate) {
+							return candidate.id !== circle2.id;
+						});
+					}
 				}
 			}
-		}
+		});
+		cookies.forEach((cookie, index) => {
+			dx = circle1.x - cookie[0];
+			dy = circle1.y - cookie[1];
+			distance = Math.sqrt(dx * dx + dy * dy);
+
+			if (distance < (circle1.r + COOKIE_RADIUS)) {
+			    cookies.splice(index, 1);
+			    createCookie();
+			    circle1.r += 1;
+			}
+		});
 	});
 }
 
