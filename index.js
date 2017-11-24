@@ -62,7 +62,7 @@ function onConnection(socket) {
   	});
 
   	socket.on('ping', function(){
-  		io.emit('pong', 'Pinging...');
+  		io.emit('pong', 'Pong');
   	});
 
   	socket.on('disconnect', function(){

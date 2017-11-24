@@ -10,3 +10,11 @@ $mainFont: 'Arial';
 #gameCanvas {
 	display: block;
 }
+
+#lag {
+	position: absolute;
+	right: 50px;
+	top: 50px;
+	font-weight: 700;
+	font-size: 18px;
+}

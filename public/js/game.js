@@ -35,7 +35,6 @@ $(document).ready(function() {
 		var myCircleArray = cookiesAndCircles.circles.filter(function(circle) {
 			return circle.id == myCircle.id;
 		});
-		//myCircle = myCircleArray[0];
 		if (myCircleArray == undefined || myCircleArray.length == 0) {
 			gameOver();
 		} else {
@@ -43,17 +42,15 @@ $(document).ready(function() {
 		}
 	});
 
-	/*
 	var sentTime = Date.now();
+	var lag = 0;
 	setInterval(function() {
 		sentTime = Date.now();
-		socket.emit('ping', myCircle);
-	}, 1000);
+		socket.emit('ping', 'Ping');
+	}, 500);
 	socket.on('pong', function(data){
-		var lag = (Date.now() - sentTime) / 2;
-		//console.log(lag);
+		lag = Date.now() - sentTime;
 	});
-	*/
 
 	// Game logic
 	const COOKIE_RADIUS = 10;
@@ -123,6 +120,9 @@ $(document).ready(function() {
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.fillText(playerName, x, y + nameSize/2);
+
+        // show lag
+        $('#lag').text(lag + 'ms');
 	}
 
 	function drawEnemies() {
