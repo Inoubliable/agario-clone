@@ -55,13 +55,14 @@ function onConnection(socket) {
   		//checkCollisions(moved, socket);
   		circles.forEach((circle, index) => {
 			if (circle.id == moved.id) {
-				circles[index] = moved;
+				circles[index].x = moved.x;
+				circles[index].y = moved.y;
 			}
 		});
   	});
 
   	socket.on('ping', function(){
-  		io.emit('ping', 'Pinging...');
+  		io.emit('pong', 'Pinging...');
   	});
 
   	socket.on('disconnect', function(){
@@ -79,7 +80,7 @@ setInterval(function() {
 // send game state loop
 setInterval(function() {
 	io.emit('game update', {cookies: cookies, circles: circles});
-}, 1000/22);
+}, 1000/60);
 
 function checkCollisions() {
 	circles.forEach((circle1, index) => {
@@ -92,7 +93,7 @@ function checkCollisions() {
 				if (distance < (circle2.r + circle1.r)) {
 					if (circle2.r > circle1.r) {
 						//circle1 dies
-			    		circle2.r += circle.r;
+			    		circle2.r += circle1.r;
 						circles = circles.filter(function(candidate) {
 							return candidate.id !== circle1.id;
 						});

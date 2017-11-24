@@ -31,36 +31,43 @@ $(document).ready(function() {
 		enemies = cookiesAndCircles.circles.filter(function(circle) {
 			return circle.id !== myCircle.id;
 		});
+		// get my circle
 		var myCircleArray = cookiesAndCircles.circles.filter(function(circle) {
 			return circle.id == myCircle.id;
 		});
-		myCircle = myCircleArray[0];
-		if (!myCircle) {
+		//myCircle = myCircleArray[0];
+		if (myCircleArray == undefined || myCircleArray.length == 0) {
 			gameOver();
+		} else {
+			myCircle.r = myCircleArray[0].r;
 		}
 	});
 
+	/*
 	var sentTime = Date.now();
 	setInterval(function() {
 		sentTime = Date.now();
 		socket.emit('ping', myCircle);
 	}, 1000);
-	socket.on('ping', function(data){
+	socket.on('pong', function(data){
 		var lag = (Date.now() - sentTime) / 2;
-		console.log(lag);
+		//console.log(lag);
 	});
+	*/
 
 	// Game logic
 	const COOKIE_RADIUS = 10;
 	var mouseX = START_POSITION_X;
 	var mouseY = START_POSITION_Y;
-	var moveX, moveY = 0;
+	var moveX = 0;
+	var moveY = 0;
 	var cookies = [];
 	var dx, dy, distance;
 	var score = 0;
 	var nameSize;
 	var circleColor = "#990000";
 	var isAlive = true;
+	var lastUpdateTime = Date.now();
 
 	canvas.addEventListener("mousemove", setMousePosition, false);
 
@@ -71,17 +78,28 @@ $(document).ready(function() {
 		moveY = (mouseY - myCircle.y) / 100;
 	}
 
-	function setCirclePosition() {
-		var newPosX = myCircle.x + moveX;
-		var newPosY = myCircle.y + moveY;
+	function setCirclePosition(now) {
+		var deltaTime = now - lastUpdateTime;
+		var newPosX = myCircle.x + (moveX*deltaTime/10);
+		var newPosY = myCircle.y + (moveY*deltaTime/10);
+		lastUpdateTime = now;
 		minX = myCircle.r;
 		maxX = WORLD_WIDTH - myCircle.r;
 		minY = myCircle.r;
 		maxY = WORLD_HEIGHT - myCircle.r;
-		if (newPosX >= minX && newPosX <= maxX) {
+
+		if (newPosX < minX) {
+			myCircle.x = minX;
+		} else if (newPosX > maxX) {
+			myCircle.x = maxX;
+		} else {
 			myCircle.x = newPosX;
 		}
-		if (newPosY >= minY && newPosY <= maxY) {
+		if (newPosY < minY) {
+			myCircle.y = minY;
+		} else if (newPosY > maxY) {
+			myCircle.y = maxY;
+		} else {
 			myCircle.y = newPosY;
 		}
 	}
@@ -119,7 +137,7 @@ $(document).ready(function() {
 	}
 
 	function update() {
-		setCirclePosition();
+		setCirclePosition(Date.now());
 		draw();
 
 		requestAnimationFrame(update);
