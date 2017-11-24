@@ -17,11 +17,11 @@ app.get('/dead', (req, res) => {
 
 io.on('connection', onConnection);
 
-const WORLD_WIDTH = 3000;
-const WORLD_HEIGHT = 2000;
+const WORLD_WIDTH = 4000;
+const WORLD_HEIGHT = 3000;
 const COOKIE_RADIUS = 10;
 const NUMBER_OF_COOKIES = 150;
-const INITIAL_RADIUS = 30;
+const INITIAL_RADIUS = 25;
 var cookies = [];
 var cookieX, cookieY;
 var colors = ["blue", "red", "green", "yellow"];
@@ -62,7 +62,7 @@ function onConnection(socket) {
   	});
 
   	socket.on('ping', function(){
-  		io.emit('pong', 'Pong');
+  		io.to(socket.id).emit('pong', 'Pong');
   	});
 
   	socket.on('disconnect', function(){
@@ -115,7 +115,7 @@ function checkCollisions() {
 			if (distance < (circle1.r + COOKIE_RADIUS)) {
 			    cookies.splice(index, 1);
 			    createCookie();
-			    circle1.r += 1;
+			    circle1.r += 0.4;
 			}
 		});
 	});

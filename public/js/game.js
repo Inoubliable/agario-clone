@@ -7,8 +7,8 @@ $(document).ready(function() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	const WORLD_WIDTH = 3000;
-	const WORLD_HEIGHT = 2000;
+	const WORLD_WIDTH = 4000;
+	const WORLD_HEIGHT = 3000;
 	var myName = localStorage.getItem('gameName');
 	const START_POSITION_X = WORLD_WIDTH / 2;
 	const START_POSITION_Y = WORLD_HEIGHT / 2;
@@ -71,14 +71,14 @@ $(document).ready(function() {
 	function setMousePosition(e) {
 		mouseX = e.clientX - camX;
 		mouseY = e.clientY - camY;
-		moveX = (mouseX - myCircle.x) / 100;
-		moveY = (mouseY - myCircle.y) / 100;
+		moveX = (mouseX - myCircle.x) / 1500;
+		moveY = (mouseY - myCircle.y) / 1500;
 	}
 
 	function setCirclePosition(now) {
 		var deltaTime = now - lastUpdateTime;
-		var newPosX = myCircle.x + (moveX*deltaTime/10);
-		var newPosY = myCircle.y + (moveY*deltaTime/10);
+		var newPosX = myCircle.x + (moveX*deltaTime);
+		var newPosY = myCircle.y + (moveY*deltaTime);
 		lastUpdateTime = now;
 		minX = myCircle.r;
 		maxX = WORLD_WIDTH - myCircle.r;
