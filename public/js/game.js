@@ -7,8 +7,8 @@ $(document).ready(function() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	const WORLD_WIDTH = 4000;
-	const WORLD_HEIGHT = 3000;
+	const WORLD_WIDTH = 6000;
+	const WORLD_HEIGHT = 4000;
 	var myName = localStorage.getItem('gameName');
 	const START_POSITION_X = WORLD_WIDTH / 2;
 	const START_POSITION_Y = WORLD_HEIGHT / 2;
@@ -46,9 +46,9 @@ $(document).ready(function() {
 	var lag = 0;
 	setInterval(function() {
 		sentTime = Date.now();
-		socket.emit('ping', 'Ping');
+		socket.emit('myPing', 'Ping');
 	}, 500);
-	socket.on('pong', function(data){
+	socket.on('myPong', function(data){
 		lag = Date.now() - sentTime;
 	});
 
@@ -65,20 +65,21 @@ $(document).ready(function() {
 	var circleColor = "#990000";
 	var isAlive = true;
 	var lastUpdateTime = Date.now();
+	const moveK = 0.03;
 
 	canvas.addEventListener("mousemove", setMousePosition, false);
 
 	function setMousePosition(e) {
 		mouseX = e.clientX - camX;
 		mouseY = e.clientY - camY;
-		moveX = (mouseX - myCircle.x) / 1500;
-		moveY = (mouseY - myCircle.y) / 1500;
+		moveX = (mouseX - myCircle.x) * moveK;
+		moveY = (mouseY - myCircle.y) * moveK;
 	}
 
 	function setCirclePosition(now) {
 		var deltaTime = now - lastUpdateTime;
-		var newPosX = myCircle.x + (moveX*deltaTime);
-		var newPosY = myCircle.y + (moveY*deltaTime);
+		var newPosX = myCircle.x + (moveX*deltaTime / myCircle.r);
+		var newPosY = myCircle.y + (moveY*deltaTime / myCircle.r);
 		lastUpdateTime = now;
 		minX = myCircle.r;
 		maxX = WORLD_WIDTH - myCircle.r;

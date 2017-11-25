@@ -17,10 +17,10 @@ app.get('/dead', (req, res) => {
 
 io.on('connection', onConnection);
 
-const WORLD_WIDTH = 4000;
-const WORLD_HEIGHT = 3000;
+const WORLD_WIDTH = 6000;
+const WORLD_HEIGHT = 4000;
 const COOKIE_RADIUS = 10;
-const NUMBER_OF_COOKIES = 150;
+const NUMBER_OF_COOKIES = 250;
 const INITIAL_RADIUS = 25;
 var cookies = [];
 var cookieX, cookieY;
@@ -43,8 +43,8 @@ function createCookie() {
 function onConnection(socket) {
 	var newCircle = {
 		id: socket.id,
-		x: WORLD_WIDTH/2,
-		y: WORLD_HEIGHT/2,
+		x: Math.random() * WORLD_WIDTH,
+		y: Math.random() * WORLD_HEIGHT,
 		r: INITIAL_RADIUS,
 		name: socket.request._query['name']
 	};
@@ -52,7 +52,6 @@ function onConnection(socket) {
 	io.to(socket.id).emit('my circle', newCircle);
 
   	socket.on('move', function(moved){
-  		//checkCollisions(moved, socket);
   		circles.forEach((circle, index) => {
 			if (circle.id == moved.id) {
 				circles[index].x = moved.x;
@@ -61,8 +60,8 @@ function onConnection(socket) {
 		});
   	});
 
-  	socket.on('ping', function(){
-  		io.to(socket.id).emit('pong', 'Pong');
+  	socket.on('myPing', function(){
+  		io.to(socket.id).emit('myPong', 'Pong');
   	});
 
   	socket.on('disconnect', function(){
@@ -93,13 +92,13 @@ function checkCollisions() {
 				if (distance < (circle2.r + circle1.r)) {
 					if (circle2.r > circle1.r) {
 						//circle1 dies
-			    		circle2.r += circle1.r;
+			    		circle2.r += (circle1.r * 0.4);
 						circles = circles.filter(function(candidate) {
 							return candidate.id !== circle1.id;
 						});
 					} else if (circle2.r < circle1.r) {
 						//circle2 dies
-			    		circle1.r += circle2.r;
+			    		circle1.r += (circle2.r * 0.4);
 						circles = circles.filter(function(candidate) {
 							return candidate.id !== circle2.id;
 						});
